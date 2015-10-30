@@ -33,6 +33,11 @@ def read_data(dirname):
 
 
 def categorize(transforms):
+    '''
+    return a dictionary with keys 0 to 9 inclusive corresponding to the
+    position of the true boolean in the transform data. each key holds
+    a list of transforms.
+    '''
     dct = defaultdict(list)
     for k, v in transforms.items():
         for trans in v:
@@ -46,6 +51,9 @@ def categorize(transforms):
 
 
 def categorize_all(data):
+    '''
+    dictionary mapping user id to its transform categories
+    '''
     dct = {}
     for i, d in enumerate(data):
         if 'transforms' in d.keys():
