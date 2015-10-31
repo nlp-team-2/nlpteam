@@ -4,6 +4,8 @@ import os
 import re
 import pdb
 from collections import defaultdict
+from RandomForest import *
+
 
 user_file_name = 'user.pickl'
 tweet_file_name = 'tweets.pickl'
@@ -62,8 +64,29 @@ def categorize_all(data):
             dct[i] = []
     return dct
 
+def gender_features(data):
+    features=[]
+    for user in data:
+        target = user['user']['Gender']
+        user_d = user['user']
+        f = defaultdict(0)
+        f['cnt_Lang'] = len(user_d['Languages'])
+        f['cnt_Regn'] = len(user['Regions'])
+        if 'tweets' in user.keys():
+            tweets_d = user['tweets']
+            f_punc_tokens =np.array([[tweets_d[key]['punc'],tweets_d[key]['tokens']] for key in tweets_d.keys()])
+            f_punc_tokens = list(np.mean(f_punc_tokens,axis=0))
+            f['avg_punc'] = f_punc_tokens[0]
+            f['tokens'] = f_punc_tokens[1]
+            f['No_Of_tweets'] = len(tweets_d)
+			
+        features.append((f,target))
+		
+    return features
 
 if __name__ == '__main__':
     data = read_data('devdata')
     categories = categorize_all(data)
+    c = RandomForest()
+    c.train(GenderClassifiyFeatures(data))
     pdb.set_trace()
