@@ -10,6 +10,7 @@
 
 from sklearn.ensemble import RandomForestClassifier
 from nltk.classify import SklearnClassifier
+from sklearn.svm import SVC
 from numpy import array
 import numpy as np
 import nltk
@@ -21,8 +22,10 @@ class RandomForest:
 	__slots__ = ('forest')
 
 	def train( self, observations ):
-		self.forest = SklearnClassifier(RandomForestClassifier())
-		self.forest.train(observations)
+                self.forest = SklearnClassifier(SVC())
+                #self.forest = nltk.NaiveBayesClassifier.train(observations)
+                #self.forest.show_most_informative_features()
+                self.forest.train(observations)
 
 	def predict( self, observations, groundTruth = False):
 		if groundTruth:
