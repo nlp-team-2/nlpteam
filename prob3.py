@@ -80,8 +80,7 @@ def avg_pronouns(tweets):
 
 
 def avg_word(word, tweets):
-    return sum([1 for tweet in tweets.values() if word in tweet['text']]) / len(tweets)
-
+	return sum([1 for tweet in tweets.values() if word in tweet['text']]) / len(tweets)
 
 
 def gender_features(data):
@@ -110,6 +109,10 @@ def gender_features(data):
 			#f['No_Of_tweets'] = len(tweets_d)
 			f['No_pronouns'] = avg_pronouns(tweets_d)
 			f['haha'] = avg_word('haha', tweets_d)
+			f['cute'] = avg_word('cute', tweets_d)
+			f['yay!'] = avg_word('yay!', tweets_d)
+			f['love'] = avg_word('love', tweets_d)
+			f['<3'] = avg_word('<3', tweets_d)
 
 		features.append((f,target))
 		
@@ -118,27 +121,26 @@ def gender_features(data):
 
 
 def split_data(data):
-        #random.shuffle(data)
-        divider = int(len(data)*.8)
-        return data[divider:], data[:divider]
+	#random.shuffle(data)
+	divider = int(len(data)*.8)
+	return data[divider:], data[:divider]
 
 
 def kfold(data, k):
-    splitdata = np.array_split(data, k)
-    combos = list(reversed(list(itertools.combinations(splitdata, k-1))))
-    accuracy_sum = 0
-    for i in range(k):
-        train= list(itertools.chain(*combos[i]))
-        
-        test = splitdata[i]
-        c = RandomForest()
-        c.train(train)
-        accuracy_sum += c.accuracy(test)
-    return accuracy_sum/k
+	splitdata = np.array_split(data, k)
+	combos = list(reversed(list(itertools.combinations(splitdata, k-1))))
+	accuracy_sum = 0
+	for i in range(k):
+		train = list(itertools.chain(*combos[i])) 
+		test = splitdata[i]
+		c = RandomForest()
+		c.train(train)
+		accuracy_sum += c.accuracy(test)
+	return accuracy_sum/k
 
 
 if __name__ == '__main__':
-    data = read_data('devdata')
-    categories = categorize_all(data)
-    print(kfold(gender_features(data), 5))
-    pdb.set_trace()
+	data = read_data('devdata')
+	categories = categorize_all(data)
+	print(kfold(gender_features(data), 5))
+	pdb.set_trace()
