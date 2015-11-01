@@ -15,6 +15,7 @@ from numpy import array
 import numpy as np
 import nltk
 from collections import defaultdict
+import itertools
 
 #classifier
 class RandomForest:
