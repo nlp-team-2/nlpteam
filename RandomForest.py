@@ -22,7 +22,7 @@ class RandomForest:
 
 	__slots__ = ('forest')
 
-	def train( self, observations , cls = SVC() , k=5 ):
+	def train( self, observations , cls = RandomForestClassifier() , k=5 ):
 		self.forest = []
 		splitdata = np.array_split(observations, k)
 		combos = list(reversed(list(itertools.combinations(splitdata, k-1))))

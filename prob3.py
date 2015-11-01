@@ -83,6 +83,16 @@ def avg_word(word, tweets):
 	return sum([1 for tweet in tweets.values() if word in tweet['text']]) / len(tweets)
 
 
+def occupation_feature(user):
+	occ = user['Occupation']
+	if occ is None:
+		return 'NA'
+	elif 'student' in occ:
+		return 'student'
+	else:
+		return 'worker'
+
+
 def gender_features(data):
 	features=[]
 	counta, countb= 0,0
@@ -113,6 +123,7 @@ def gender_features(data):
 			f['yay!'] = avg_word('yay!', tweets_d)
 			f['love'] = avg_word('love', tweets_d)
 			f['<3'] = avg_word('<3', tweets_d)
+			f['occupation'] = occupation_feature(user_d)
 
 		features.append((f,target))
 		
@@ -120,27 +131,87 @@ def gender_features(data):
 	return features
 
 
+quad_regex = re.compile(r'([a-zA-Z!])\1{3,}')
+def avg_quads(user):
+	if 'tweets' not in user:
+		return 0
+
+	total = 0
+	for tweet in user['tweets'].values():
+		total += len(quad_regex.findall(tweet['text']))
+
+	num_tokens = sum(tweet['tokens'] for tweet in user['tweets'].values())
+	return total / num_tokens
+
+
+def age_features(data):
+	features=[]
+	for user in data:
+		if 'Year' in user['user'] and user['user']['Year'] is not None:
+			age = 2013 - int(user['user']['Year'])
+			if age <= 25:
+				target = '25under'
+			elif age <= 35:
+				target = '35under'
+			else:
+				target = '36over'
+		else:
+			target = 'NA'
+		f = defaultdict(int)
+		f['avg_quads'] = avg_quads(user)
+		f['cnt_Lang'] = len(user['user']['Languages'])
+		f['cnt_Regs'] = len(user['user']['Regions'])
+		if 'tweets' in user.keys():
+			tweets_d = user['tweets']
+			f['haha'] = avg_word('haha', tweets_d)
+			f['cute'] = avg_word('cute', tweets_d)
+			f['yay!'] = avg_word('yay!', tweets_d)
+			f['love'] = avg_word('love', tweets_d)
+			f['<3'] = avg_word('<3', tweets_d)
+		features.append((f, target))
+	return features
+
+
+def age_features2(data):
+	features = []
+	for user in data:
+		if 'tweets' not in user:
+			continue
+		if 'Year' in user['user'] and user['user']['Year'] is not None:
+			age = 2013 - int(user['user']['Year'])
+			if age <= 25:
+				target = '25under'
+			elif age <= 35:
+				target = '35under'
+			else:
+				target = '36over'
+		langs = len(user['user']['Languages'])
+		regions = len(user['user']['Regions'])
+		for tweet in user['tweets'].values():
+			f = defaultdict(int)
+			f['tokens'] = tweet['tokens']
+			f['avg_tokenlen'] = sum([len(t) for t in tweet['tokenized']])/tweet['tokens']
+			f['cnt_Lang'] = langs
+			#f['cnt_Regs'] = regions
+			f['punc'] = tweet['punc']
+			f['haha'] = tweet['text'].count('haha')
+			f['cute'] = tweet['text'].count('cute')
+
+			features.append((f, target))
+
+	return features
+
+
 def split_data(data):
-	#random.shuffle(data)
 	divider = int(len(data)*.8)
 	return data[divider:], data[:divider]
 
 
-def kfold(data, k):
-	splitdata = np.array_split(data, k)
-	combos = list(reversed(list(itertools.combinations(splitdata, k-1))))
-	accuracy_sum = 0
-	for i in range(k):
-		train = list(itertools.chain(*combos[i])) 
-		test = splitdata[i]
-		c = RandomForest()
-		c.train(train)
-		accuracy_sum += c.accuracy(test)
-	return accuracy_sum/k
-
-
 if __name__ == '__main__':
 	data = read_data('devdata')
-	categories = categorize_all(data)
-	print(kfold(gender_features(data), 5))
+	f = RandomForest()
+	features = age_features(data)
+	f.train(features)
+	f.cm(features)
+	print(f.accuracy(features))
 	pdb.set_trace()
