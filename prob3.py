@@ -9,7 +9,7 @@ import itertools
 from textblob import TextBlob
 from collections import defaultdict
 from RandomForest import *
-
+from RandomForestReg import *
 
 user_file_name = 'user.pickl'
 tweet_file_name = 'tweets.pickl'
@@ -201,6 +201,26 @@ def age_features2(data):
 
 	return features
 
+def birthyear_features(data):
+	features = []
+	for user in data:
+		f = defaultdict(int)
+		if user['user']['Year'] != None:
+			target = int(user['user']['Year'])
+		else:
+			target = -1
+		f['cnt_Lang'] = len(user['user']['Languages'])
+		f['cnt_Regs']  = len(user['user']['Regions'])
+		if 'tweets' in user.keys():
+			tweets_d = user['tweets']
+			f['haha'] = avg_word('haha', tweets_d)
+			f['No_pronouns'] = avg_pronouns(tweets_d)
+		
+		features.append((f,target))
+	
+	keylist = ['cnt_Lang','cnt_Regs','haha','No_pronouns']
+	return features,keylist
+
 
 def split_data(data):
 	divider = int(len(data)*.8)
@@ -209,9 +229,16 @@ def split_data(data):
 
 if __name__ == '__main__':
 	data = read_data('devdata')
-	f = RandomForest()
-	features = age_features(data)
-	f.train(features)
-	f.cm(features)
-	print(f.accuracy(features))
+	#f = RandomForest()
+	#features = age_features(data)
+	#f.train(features)
+	#f.cm(features)
+	#print(f.accuracy(features))
+	by_features,by_keylist = birthyear_features(data)
+	by_r= RandomForestReg()
+	by_r.train(by_features,by_keylist)
+	print(by_r.accuracy(by_features))
+	print(by_r.MSE(by_features))
+	output= by_r.predict(by_features,True)
+	print(2013-output)
 	pdb.set_trace()
