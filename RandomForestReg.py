@@ -39,8 +39,8 @@ class RandomForestReg:
 			train_y=train[:,-1]
 			test_X=test[:,:-1]
 			test_y=test[:,-1]
-			c = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=1, random_state=0, loss='ls')
-			#c = RandomForestRegressor()
+			#c = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=1, random_state=0, loss='ls')
+			c = RandomForestRegressor()
 			c.fit(train_X,train_y)
 			MSE += mean_squared_error(test_y,c.predict(test_X))
 			self.forest.append(c)

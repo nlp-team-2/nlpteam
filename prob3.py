@@ -33,6 +33,7 @@ def read_data(dirname):
 				continue
 			with open(os.path.join(dirname, d, pickl), 'rb') as f:
 				loaded[name] = pickle.load(f)
+		loaded['id'] = d
 
 		lst.append(loaded)
 	return lst
@@ -87,10 +88,12 @@ def occupation_feature(user):
 	occ = user['Occupation']
 	if occ is None:
 		return 'NA'
-	elif 'student' in occ:
+	elif occ.lower() == 'student':
 		return 'student'
+	elif 'student' in occ.lower():
+		return 'complicated student'
 	else:
-		return 'worker'
+		return 'other'
 
 
 def gender_features(data):
@@ -209,36 +212,101 @@ def birthyear_features(data):
 			target = int(user['user']['Year'])
 		else:
 			target = -1
+		f['avg_quads'] = avg_quads(user)
 		f['cnt_Lang'] = len(user['user']['Languages'])
 		f['cnt_Regs']  = len(user['user']['Regions'])
 		if 'tweets' in user.keys():
 			tweets_d = user['tweets']
 			f['haha'] = avg_word('haha', tweets_d)
+			f['cute'] = avg_word('cute', tweets_d)
+			f['yay!'] = avg_word('yay!', tweets_d)
+			f['love'] = avg_word('love', tweets_d)
+			f['<3'] = avg_word('<3', tweets_d)
 			f['No_pronouns'] = avg_pronouns(tweets_d)
 		
 		features.append((f,target))
 	
-	keylist = ['cnt_Lang','cnt_Regs','haha','No_pronouns']
+	keylist = ['avg_quads', 'cnt_Lang', 'cnt_Regs', 'haha', 'cute', 'yay!', 'love', '<3', 'No_pronouns']
 	return features,keylist
 
 
-def split_data(data):
-	divider = int(len(data)*.8)
-	return data[divider:], data[:divider]
+def get_education_label(user):
+	ed = user['Education']
+	label = {
+		"Bachelor's Degree": "Undergrad",
+		"Some College": "Undergrad",
+		None: "Default",
+		"Currently In College": "Undergrad",
+		"Master's Degree": "Graduate",
+		"High School": "High School",
+		"Phd": "Graduate",
+		"Doctoral Degree": "Graduate",
+		"Highschool": "High School",
+		"Professional Bachelor": "Undergrad",
+		"Bachelor": "Undergrad",
+		"In Graduate School For Mba": "Graduate",
+		"Almost Done With My Mlis": "Graduate",
+		"One Semester Left For My Ma": "Graduate",
+		"Ba Photographic And Electronic Media": "Undergrad",
+		"Bs Computer Science": "Undergrad",
+		"Bachelor Of Science": "Undergrad"
+	}[ed]
+	return label
+
+
+def education_features(data):
+	features = []
+	for user in data:
+		target = get_education_label(user['user'])
+		f = defaultdict(int)
+		f['occupation'] = occupation_feature(user['user'])
+		f['avg_quads'] = avg_quads(user)
+		f['cnt_Lang'] = len(user['user']['Languages'])
+		f['cnt_Regs'] = len(user['user']['Regions'])
+		if 'tweets' in user.keys():
+			tweets_d = user['tweets']
+			f['haha'] = avg_word('haha', tweets_d)
+			f['cute'] = avg_word('cute', tweets_d)
+			f['yay!'] = avg_word('yay!', tweets_d)
+			f['love'] = avg_word('love', tweets_d)
+			f['<3'] = avg_word('<3', tweets_d)
+		features.append((f, target))
+	print(features)
+	return features
 
 
 if __name__ == '__main__':
 	data = read_data('devdata')
-	#f = RandomForest()
-	#features = age_features(data)
-	#f.train(features)
-	#f.cm(features)
-	#print(f.accuracy(features))
+	'''
+	f = RandomForest()
+	features = age_features(data)
+	f.train(features)
+	f.cm(features)
+	print(f.accuracy(features))
+	'''
+
 	by_features,by_keylist = birthyear_features(data)
 	by_r= RandomForestReg()
 	by_r.train(by_features,by_keylist)
-	print(by_r.accuracy(by_features))
-	print(by_r.MSE(by_features))
+	print('Accuracy: ', by_r.accuracy(by_features))
+	print('MSE: ', by_r.MSE(by_features))
 	output= by_r.predict(by_features,True)
-	print(2013-output)
+	output = 2013-output
+	output = output[:,0] - output[:,1]
+	print(output)
+	'''
+	output[output <= 25] = 25
+	output[np.logical_and(output > 25, output <= 35)] = 35
+	output[output > 35] = 36
+	diff = (output[:,1] - output[:,0])==0
+	print(sum(1 if b else 0 for b in diff)/len(diff))
+	'''
+	
+	'''
+	f = RandomForest()
+	feats = education_features(data)
+	f.train(feats)
+	f.cm(feats)
+	f.accuracy(feats)
+	'''
 	pdb.set_trace()
