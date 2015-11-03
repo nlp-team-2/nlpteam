@@ -10,8 +10,7 @@
 
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
-from nltk.classify import SklearnClassifier
-from sklearn.svm import SVC
+from sklearn.svm import SVR
 from numpy import array
 import numpy as np
 import nltk
@@ -20,11 +19,11 @@ import itertools
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import r2_score
-#classifier
+#Regression
 class RandomForestReg:
 
 	__slots__ = ('forest','keylist')
-	def train( self, observations, keylist , k=5 ):
+	def train( self, observations, keylist, k=5 ):
 			
 		self.keylist = keylist		
 		data = np.array([ [fe[key]  for key in keylist]+[g]  for fe,g in observations])
@@ -64,6 +63,7 @@ class RandomForestReg:
 		xx = np.zeros(len(observations))
 		for c in self.forest:
 			p = c.predict(X)
+			#print(p)
 			xx =xx+p
 		predict = np.round(xx/len(self.forest))
 

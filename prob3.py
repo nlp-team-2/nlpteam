@@ -223,13 +223,17 @@ def birthyear_features(data, include_id = False):
 			f['love'] = avg_word('love', tweets_d)
 			f['<3'] = avg_word('<3', tweets_d)
 			f['No_pronouns'] = avg_pronouns(tweets_d)
+			f_punc_tokens =np.array([[tweets_d[key]['punc'],tweets_d[key]['tokens']] for key in tweets_d.keys()])
+			f_punc_tokens = list(np.mean(f_punc_tokens,axis=0))
+			f['avg_punc'] = f_punc_tokens[0]
+			#f['tokens'] = f_punc_tokens[1]
 
 		if include_id:
 			features.append((f, target, user['id']))
 		else:
 			features.append((f,target))
 	
-	keylist = ['avg_quads', 'cnt_Lang', 'cnt_Regs', 'haha', 'cute', 'yay!', 'love', '<3', 'No_pronouns']
+	keylist = ['avg_quads', 'cnt_Lang', 'cnt_Regs', 'haha', 'cute', 'yay!', 'love', '<3', 'No_pronouns', 'avg_punc']
 	return features,keylist
 
 
@@ -284,14 +288,20 @@ def education_features(data, include_id = False):
 
 if __name__ == '__main__':
 	data = read_data('devdata')
-	f = RandomForest()
-	features = age_features(data)
-	f.train(features)
-	with open('test.pickl', 'wb') as file:
-		pickle.dump(f, file)
-	with open('test.pickl', 'rb') as file:
-		g = pickle.load(file)
-	g.cm(features)
-	print(g.accuracy(features))
-	print(g.predict(age_features(data,include_id=True),True, True))
+	f = RandomForestReg()
+	features,keylist = birthyear_features(data)
+	f.train(features,keylist)
+	#with open('test.pickl', 'wb') as file:
+	#	pickle.dump(f, file)
+	#with open('test.pickl', 'rb') as file:
+	#	g = pickle.load(file)
+	#f.cm(features)
+	print('BirthYear Accuracy: ',f.accuracy(features))
+	print('FInal MSE Error : ', f.MSE(features))
+	print('R2 score: ',f.r2(features))
+	features2,_ = birthyear_features(data,True)
+	output=f.predict(features2,groundTruth=True, include_id=True)
+	print(output)
+	import pdb;pdb.set_trace();
+	print(abs(output[:,1]-output[:,2]))
 	#pdb.set_trace()

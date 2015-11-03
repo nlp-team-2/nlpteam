@@ -16,7 +16,7 @@ import numpy as np
 import nltk
 from collections import defaultdict
 import itertools
-
+from sklearn.metrics import accuracy_score
 #import pdb
 
 #classifier
@@ -24,7 +24,7 @@ class RandomForest:
 
 	__slots__ = ('forest')
 
-	def train( self, observations , cls = RandomForestClassifier() , k=5 ):
+	def train( self, observations ,  k=5 ):
 		self.forest = []
 		splitdata = np.array_split(observations, k)
 		combos = list(reversed(list(itertools.combinations(splitdata, k-1))))
@@ -32,8 +32,8 @@ class RandomForest:
 		for i in range(k):
 			train = list(itertools.chain(*combos[i]))
 			test = splitdata[i]
-			c = SklearnClassifier(cls)
-			
+			c = SklearnClassifier(RandomForestClassifier())
+			#c = SklearnClassifier(cls)	
 			c.train(train)
 			accuracy_sum += nltk.classify.accuracy(c,test)
 			self.forest.append(c)
@@ -59,10 +59,12 @@ class RandomForest:
 		return predict
 	
 	def classify( self, fe):
+		#print([c.classify(fe)  for c in self.forest])
 		return nltk.FreqDist([c.classify(fe)  for c in self.forest]).max()
 
 	def accuracy( self, observations ):
-		return sum([nltk.classify.accuracy(c,observations) for c in self.forest])/len(self.forest)
+		output= np.array(self.predict(observations, groundTruth=True))
+		return accuracy_score(output[:,1],output[:,0])
 
 	def cm( self, data ):
 		output= np.array(self.predict(data, groundTruth=True))
