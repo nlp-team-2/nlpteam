@@ -17,6 +17,8 @@ import nltk
 from collections import defaultdict
 import itertools
 
+import pdb
+
 #classifier
 class RandomForest:
 
@@ -31,6 +33,7 @@ class RandomForest:
 			train = list(itertools.chain(*combos[i]))
 			test = splitdata[i]
 			c = SklearnClassifier(cls)
+			
 			c.train(train)
 			accuracy_sum += nltk.classify.accuracy(c,test)
 			self.forest.append(c)
@@ -41,11 +44,20 @@ class RandomForest:
                 #self.forest.show_most_informative_features()
                 #self.forest.train(observations)
 
-	def predict( self, observations, groundTruth = False):
+	def predict( self, observations, groundTruth = False, include_id = False):
 		if groundTruth:
-			predict = np.array([[self.classify(fe),g] for fe,g in observations])
+			if include_id:
+				#print(observations[0][0])
+				predict = np.array([[id,self.classify(fe),g] for fe,g,id in observations])
+			else:
+				predict = np.array([[self.classify(fe),g] for fe,g in observations])
+				raise Exception("NO")
 		else:
-			predict = np.array([[self.classify(fe)] for fe  in observations])
+			raise Exception("NO")
+			if include_id:
+				predict = np.array([[id,self.classify(fe)] for fe,id  in observations])
+			else:
+				predict = np.array([[self.classify(fe)] for fe in observations])
 
 		return predict
 	
@@ -56,7 +68,7 @@ class RandomForest:
 		return sum([nltk.classify.accuracy(c,observations) for c in self.forest])/len(self.forest)
 
 	def cm( self, data ):
-		output= np.array(self.predict(data,True))
+		output= np.array(self.predict(data, groundTruth=True))
 		print(nltk.ConfusionMatrix(list(output[:,1]),list(output[:,0])))
 
 

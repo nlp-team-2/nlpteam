@@ -51,11 +51,17 @@ class RandomForestReg:
                 #self.forest.show_most_informative_features()
                 #self.forest.train(observations)
 
-	def predict( self, observations, groundTruth = False):
+	def predict( self, observations, groundTruth = False, include_id=False):
 		if groundTruth:
-			data = np.array([[fe[key]  for key in self.keylist ]+[g]  for fe,g in observations])
-			X = data[:,:-1]
-			g = data[:,-1]
+			if include_id:
+				data = np.array([[id]+[fe[key]  for key in self.keylist ]+[g]  for fe,g,id in observations])
+				X = data[:,1:-1]
+				y = data[:,-1]
+				ID = data[:,0]
+			else:
+				data = np.array([[fe[key]  for key in self.keylist ]+[g]  for fe,g in observations])
+				X = data[:,:-1]
+				y = data[:,-1]
 		else:
 			X= np.array([[fe[key]  for key in self.keylist ]  for fe in observations])
 		
@@ -64,8 +70,9 @@ class RandomForestReg:
 			p = c.predict(X)
 			xx =xx+p
 		predict = np.round(xx/len(self.forest))
-		#predict = np.floor(np.mean(np.array([np.vstack((xx,c.predict(X))) for c in self.forest]),axis=0))
 
+		if include_id:
+			predict = np.vstack(ID, predict)
 		if groundTruth:
 			predict = np.vstack((predict,g)).T
 
@@ -73,13 +80,13 @@ class RandomForestReg:
 	
 
 	def accuracy( self, observations ):
-		predict = self.predict(observations, True)
+		predict = self.predict(observations, groundTruth = True)
 		return accuracy_score(predict[:,1],predict[:,0])
 
 	def MSE( self, observations ):
-		predict = self.predict(observations, True)
+		predict = self.predict(observations, groundTruth = True)
 		return mean_squared_error(predict[:,1],predict[:,0])
 
 	def r2( self, observations):
-		predict = self.predict(observations, True)
+		predict = self.predict(observations, groundTruth = True)
 		return r2_score(predict[:,1],predict[:,0])
