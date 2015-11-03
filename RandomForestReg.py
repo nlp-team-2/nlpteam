@@ -46,10 +46,6 @@ class RandomForestReg:
 			self.forest.append(c)
 
 		print('MSE Train data(Using K fold)= ', MSE/k )
-		#self.forest = SklearnClassifier(SVC())
-                #self.forest = nltk.NaiveBayesClassifier.train(observations)
-                #self.forest.show_most_informative_features()
-                #self.forest.train(observations)
 
 	def predict( self, observations, groundTruth = False, include_id=False):
 		if groundTruth:

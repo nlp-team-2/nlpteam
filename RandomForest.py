@@ -47,13 +47,10 @@ class RandomForest:
 	def predict( self, observations, groundTruth = False, include_id = False):
 		if groundTruth:
 			if include_id:
-				#print(observations[0][0])
 				predict = np.array([[id,self.classify(fe),g] for fe,g,id in observations])
 			else:
 				predict = np.array([[self.classify(fe),g] for fe,g in observations])
-				raise Exception("NO")
 		else:
-			raise Exception("NO")
 			if include_id:
 				predict = np.array([[id,self.classify(fe)] for fe,id  in observations])
 			else:

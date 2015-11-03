@@ -11,8 +11,8 @@ from collections import defaultdict
 from RandomForest import *
 from RandomForestReg import *
 
-user_file_name = 'user.pickl'
-tweet_file_name = 'tweets.pickl'
+#user_file_name = 'user.pickl'
+#tweet_file_name = 'tweets.pickl'
 
 def read_data(dirname):
 	'''
@@ -102,7 +102,7 @@ def gender_features(data, include_id = False):
 		target = user['user']['Gender']
 		user_d = user['user']
 		if target == None:
-			continue
+			target ='NA'
 		f = defaultdict(int)
 		#f['cnt_Lang'] = len(user_d['Languages'])
 		#f['cnt_Regn'] = len(user_d['Regions'])

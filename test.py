@@ -12,7 +12,8 @@ textdir = 'textfiles'
 def load_classifier(fname):
 	with open(os.path.join(picklepath, fname), 'rb') as f:
 		return pickle.load(f)
-
+def remove_id(features):
+	return [(fe,g) for fe,g,_ in features]
 
 def test(picklepath, testpath):
 	age_classifier = load_classifier('age.pickl')
@@ -48,8 +49,23 @@ def test(picklepath, testpath):
 	with open(os.path.join(textdir, 'education.txt'), 'w') as f:
 		for line in education_predictions:
 			f.write('{}\t{}\n'.format(line[0], line[1]))
+	
+	#Printing accuracy and confusion Matrix
+	age_features = remove_id(age_features) 
+	birthyear_features = remove_id(birthyear_features)
+	gender_features = remove_id(gender_features)
+	education_features = remove_id(education_features)
 
-
+	print('Age Classifier Accuracy: ',age_classifier.accuracy(age_features))
+	age_classifier.cm(age_features)
+	print('Gender Classifier Accuracy: ',gender_classifier.accuracy(gender_features))
+	gender_classifier.cm(gender_features)
+	print('Education Classifier Accuracy: ',education_classifier.accuracy(education_features))
+	education_classifier.cm(education_features)
+	print('BirtYear Classifier Accuracy: ',birthyear_classifier.accuracy(birthyear_features))
+	print('BirthYear Classifier R2 Socre: ',birthyear_classifier.r2(birthyear_features))
+	print('BirthYear Classifier MSE: ',birthyear_classifier.MSE(birthyear_features))
+	
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Test project 3 classifiers')
 	parser.add_argument('-p', help='the directory holding the pickled classifiers')
