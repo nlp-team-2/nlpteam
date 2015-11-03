@@ -72,9 +72,9 @@ class RandomForestReg:
 		predict = np.round(xx/len(self.forest))
 
 		if include_id:
-			predict = np.vstack(ID, predict)
+			predict = np.vstack((ID, predict))
 		if groundTruth:
-			predict = np.vstack((predict,g)).T
+			predict = np.vstack((predict,y)).T
 
 		return predict
 	

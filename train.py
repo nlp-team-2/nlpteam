@@ -1,6 +1,7 @@
 from prob3 import *
 from RandomForest import *
 from RandomForestReg import *
+import os
 import numpy as np
 try:
 	import cPickle as pickle
@@ -8,43 +9,25 @@ except:
 	import pickle
 
 
-'''
-MYSTERY
-def train(classifier, features):
+pickledir = 'classifiers'
+
+
+def train(classifier, features, fname):
 	classifier.train(*features)
-	return classifier
-'''
+	with open(os.path.join(pickledir, fname), 'wb') as f:
+		pickle.dump(classifier, f)
+
 
 def train_pickle():
 	data = read_data('devdata')
 
-	a = RandomForest()
-	a.train(age_features(data))
+	if not os.path.exists(pickledir):
+		os.makedirs(pickledir)
 
-	b = RandomForestReg()
-	x, y = birthyear_features(data)
-	b.train(x, y)
-	
-	c = RandomForest()
-	c.train(gender_features(data))
-
-	d = RandomForest()
-	d.train(education_features(data))
-
-	'''
-	a = train(RandomForest(), (age_features(data),))
-	b = train(RandomForestReg(), birthyear_features(data))
-	c = train(RandomForest(), (gender_features(data),))
-	d = train(RandomForest(), (education_features(data),))
-	'''
-
-	with open('classifiers.pickl', 'wb') as f:
-		pickle.dump((a, b, c, d), f)
-	'''
-	with open('classifiers.pickl', 'rb') as f:
-		a1, b1, c1, d1 = pickle.load(f)
-	a1.predict(age_features(data, include_id = True), groundTruth = True, include_id = True)
-	'''
+	train(RandomForest(), (age_features(data),), 'age.pickl')
+	train(RandomForestReg(), birthyear_features(data), 'birthyear.pickl')
+	train(RandomForest(), (gender_features(data),), 'gender.pickl')
+	train(RandomForest(), (education_features(data),), 'education.pickl')
 
 
 if __name__ == '__main__':
