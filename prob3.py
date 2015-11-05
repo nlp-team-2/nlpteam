@@ -11,8 +11,6 @@ from collections import defaultdict
 from RandomForest import *
 from RandomForestReg import *
 
-#user_file_name = 'user.pickl'
-#tweet_file_name = 'tweets.pickl'
 
 def read_data(dirname):
 	'''
@@ -96,13 +94,17 @@ def occupation_feature(user):
 		return 'other'
 
 
-def gender_features(data, include_id = False):
+def gender_features(data, include_id = False, include_na = True):
 	features=[]
 	for user in data:
 		target = user['user']['Gender']
 		user_d = user['user']
 		if target == None:
 			target ='NA'
+		
+		if not include_na and target == 'NA':
+			continue
+		
 		f = defaultdict(int)
 		#f['cnt_Lang'] = len(user_d['Languages'])
 		#f['cnt_Regn'] = len(user_d['Regions'])
@@ -119,7 +121,7 @@ def gender_features(data, include_id = False):
 			f['yay!'] = avg_word('yay!', tweets_d)
 			f['love'] = avg_word('love', tweets_d)
 			f['<3'] = avg_word('<3', tweets_d)
-			f['occupation'] = occupation_feature(user_d)
+			#f['occupation'] = occupation_feature(user_d)
 
 		if include_id:
 			features.append((f, target, user['id']))
@@ -142,7 +144,7 @@ def avg_quads(user):
 	return total / num_tokens
 
 
-def age_features(data, include_id = False):
+def age_features(data, include_id = False, include_na=True):
 	features=[]
 	for user in data:
 		if 'Year' in user['user'] and user['user']['Year'] is not None:
@@ -155,6 +157,10 @@ def age_features(data, include_id = False):
 				target = '36over'
 		else:
 			target = 'NA'
+		
+		if not include_na and target == 'NA':
+			continue
+
 		f = defaultdict(int)
 		f['avg_quads'] = avg_quads(user)
 		f['cnt_Lang'] = len(user['user']['Languages'])
@@ -166,6 +172,8 @@ def age_features(data, include_id = False):
 			f['yay!'] = avg_word('yay!', tweets_d)
 			f['love'] = avg_word('love', tweets_d)
 			f['<3'] = avg_word('<3', tweets_d)
+			f['#'] = avg_word('#',tweets_d)
+			f['http'] = avg_word('http',tweets_d)
 
 		if include_id:
 			features.append((f, target, user['id']))
@@ -204,7 +212,7 @@ def age_features2(data):
 
 	return features
 
-def birthyear_features(data, include_id = False):
+def birthyear_features(data, include_id = False, include_na =True):
 	features = []
 	for user in data:
 		f = defaultdict(int)
@@ -212,6 +220,10 @@ def birthyear_features(data, include_id = False):
 			target = int(user['user']['Year'])
 		else:
 			target = -1
+
+		if not include_na and target == -1:
+			continue
+
 		f['avg_quads'] = avg_quads(user)
 		f['cnt_Lang'] = len(user['user']['Languages'])
 		f['cnt_Regs']  = len(user['user']['Regions'])
@@ -239,7 +251,7 @@ def birthyear_features(data, include_id = False):
 
 def get_education_label(user):
 	ed = user['Education']
-	label = {
+	label = defaultdict(str,{
 		"Bachelor's Degree": "Undergrad",
 		"Some College": "Undergrad",
 		None: "Default",
@@ -257,14 +269,27 @@ def get_education_label(user):
 		"Ba Photographic And Electronic Media": "Undergrad",
 		"Bs Computer Science": "Undergrad",
 		"Bachelor Of Science": "Undergrad"
-	}[ed]
+	})[ed]
+	
+	if label == '':
+		if 'college' in ed.lower() or 'bachelor' in ed.lower() or 'undergrad' in ed.lower() or 'Bs ' in ed or 'BS ' in ed or 'Ba' in ed or 'BA' in ed:
+			label = 'Undergrad'
+		elif 'grad' in ed.lower() or 'master' in ed.lower() or 'phd' in ed.lower() or 'degree' in ed.lower() or 'Ms ' in ed or 'MS ' in ed:
+			label = 'Graduate'
+		else:
+			label = 'High School'
+
 	return label
 
 
-def education_features(data, include_id = False):
+def education_features(data, include_id = False, include_na =  True):
 	features = []
 	for user in data:
 		target = get_education_label(user['user'])
+		
+		if not include_na and target == 'Default':
+			continue
+
 		f = defaultdict(int)
 		f['occupation'] = occupation_feature(user['user'])
 		f['avg_quads'] = avg_quads(user)
@@ -277,6 +302,9 @@ def education_features(data, include_id = False):
 			f['yay!'] = avg_word('yay!', tweets_d)
 			f['love'] = avg_word('love', tweets_d)
 			f['<3'] = avg_word('<3', tweets_d)
+			#transform_d = categorize(user['transforms'])
+			#for i in range(10):
+			#	f['Trans_'+str(i)]= len(transform_d[i])/len(tweets_d)
 
 		if include_id:
 			features.append((f, target, user['id']))
@@ -288,20 +316,34 @@ def education_features(data, include_id = False):
 
 if __name__ == '__main__':
 	data = read_data('devdata')
-	f = RandomForestReg()
-	features,keylist = birthyear_features(data)
-	f.train(features,keylist)
-	#with open('test.pickl', 'wb') as file:
-	#	pickle.dump(f, file)
-	#with open('test.pickl', 'rb') as file:
-	#	g = pickle.load(file)
-	#f.cm(features)
-	print('BirthYear Accuracy: ',f.accuracy(features))
-	print('FInal MSE Error : ', f.MSE(features))
-	print('R2 score: ',f.r2(features))
-	features2,_ = birthyear_features(data,True)
-	output=f.predict(features2,groundTruth=True, include_id=True)
+	bc = RandomForestReg()
+	ac = RandomForest()
+	gc = RandomForest()
+	ec = RandomForest()
+	bf,keylist = birthyear_features(data,include_na=False)
+	af = age_features(data,include_na=False)
+	gf =  gender_features(data,include_na=False)
+	ef = education_features(data,include_na=False)
+	#random.shuffle(bf)
+	#random.shuffle(af)
+	#random.shuffle(gf)
+	#random.shuffle(ef)
+	bt = int(0.8 * len(bf))
+	at = int(0.8 * len(af))
+	gt = int(0.8 * len(gf))
+	et = int(0.8 * len(ef))
+	bc.train(bf[:bt],keylist,k=1)
+	ac.train(af[:at],k=1)
+	gc.train(gf[:gt],k=1)
+	ec.train(ef[:et],k=1)
+	
+
+	print('BirthYear Accuracy: ',bc.accuracy(bf[bt:]))
+	print('BisrtYear MSE: ', bc.MSE(bf[bt:]))
+	print('R2 score: ',bc.r2(bf[bt:]))
+	output=bc.predict(bf[bt:],groundTruth=True)
 	print(output)
-	import pdb;pdb.set_trace();
-	print(abs(output[:,1]-output[:,2]))
-	#pdb.set_trace()
+	ac.cm(af[at:])
+	gc.cm(gf[gt:])
+	ec.cm(ef[et:])
+	#import pdb;pdb.set_trace();

@@ -10,6 +10,7 @@
 
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn import linear_model
 from sklearn.svm import SVR
 from numpy import array
 import numpy as np
@@ -24,7 +25,9 @@ class RandomForestReg:
 
 	__slots__ = ('forest','keylist')
 	def train( self, observations, keylist, k=5 ):
-			
+		'''
+		An Ensamble K-fold regressor
+		'''	
 		self.keylist = keylist		
 		data = np.array([ [fe[key]  for key in keylist]+[g]  for fe,g in observations])
 		self.forest = []
@@ -34,12 +37,17 @@ class RandomForestReg:
 		for i in range(k):
 			train = np.array(list(itertools.chain(*combos[i])))
 			test = np.array(splitdata[i])
+			if k==1:
+				train=data
+				test=data
+			#import pdb; pdb.set_trace();
 			train_X=train[:,:-1]
 			train_y=train[:,-1]
 			test_X=test[:,:-1]
 			test_y=test[:,-1]
 			#c = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=1, random_state=0, loss='ls')
 			c = RandomForestRegressor()
+			#c = linear_model.LinearRegression()
 			c.fit(train_X,train_y)
 			MSE += mean_squared_error(test_y,c.predict(test_X))
 			self.forest.append(c)

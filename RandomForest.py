@@ -5,7 +5,7 @@
 	Author:         Pitor
 	Author:         Prateek
 
-	Description:    Scikit Learn Random Forrest wrapper
+	Description:    Scikit Learn Random Forest wrapper
 """
 
 from sklearn.ensemble import RandomForestClassifier
@@ -25,6 +25,9 @@ class RandomForest:
 	__slots__ = ('forest')
 
 	def train( self, observations ,  k=5 ):
+		'''
+		An ensamble K-Fold Classifier 
+		'''
 		self.forest = []
 		splitdata = np.array_split(observations, k)
 		combos = list(reversed(list(itertools.combinations(splitdata, k-1))))
@@ -32,6 +35,9 @@ class RandomForest:
 		for i in range(k):
 			train = list(itertools.chain(*combos[i]))
 			test = splitdata[i]
+			if k==1:
+				train = observations
+				test = observations
 			c = SklearnClassifier(RandomForestClassifier())
 			#c = SklearnClassifier(cls)	
 			c.train(train)
@@ -39,10 +45,6 @@ class RandomForest:
 			self.forest.append(c)
 
 		print('Accuracy on Train data(Using K fold)= ', accuracy_sum/k )
-		#self.forest = SklearnClassifier(SVC())
-                #self.forest = nltk.NaiveBayesClassifier.train(observations)
-                #self.forest.show_most_informative_features()
-                #self.forest.train(observations)
 
 	def predict( self, observations, groundTruth = False, include_id = False):
 		if groundTruth:

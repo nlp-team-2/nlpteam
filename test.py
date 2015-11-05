@@ -40,7 +40,7 @@ def test(picklepath, testpath):
 		age_predictions = np.sort(age_predictions, axis=0)
 		birthyear_predictions = np.sort(birthyear_predictions, axis=0)
 		for a, b in zip(age_predictions, birthyear_predictions):
-			f.write('{}\t{} {}\n'.format(a[0], a[1], b[1]))
+			f.write('{}\t{}\t{}\n'.format(a[0], a[1], int(float(b[1]))))
 
 	with open(os.path.join(textdir, 'gender.txt'), 'w') as f:
 		for line in gender_predictions:

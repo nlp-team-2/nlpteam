@@ -24,10 +24,10 @@ def train_pickle():
 	if not os.path.exists(pickledir):
 		os.makedirs(pickledir)
 
-	train(RandomForest(), (age_features(data),), 'age.pickl')
-	train(RandomForestReg(), birthyear_features(data), 'birthyear.pickl')
-	train(RandomForest(), (gender_features(data),), 'gender.pickl')
-	train(RandomForest(), (education_features(data),), 'education.pickl')
+	train(RandomForest(), (age_features(data, include_na=False),), 'age.pickl')
+	train(RandomForestReg(), birthyear_features(data,include_na=False), 'birthyear.pickl')
+	train(RandomForest(), (gender_features(data, include_na=False),), 'gender.pickl')
+	train(RandomForest(), (education_features(data, include_na=False),), 'education.pickl')
 
 
 if __name__ == '__main__':
